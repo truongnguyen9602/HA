@@ -55,7 +55,16 @@
 </head>
 <body>
     <div id="error-log"></div>
-    
+
+    <div id="inapp-warning">
+        <div>
+            📱 Bạn đang mở bằng trình duyệt trong app (Messenger/Zalo...) nên camera có thể không hoạt động.<br><br>
+            Hãy bấm nút <b>••• (menu)</b> ở trên và chọn <b>"Mở bằng Safari"</b> hoặc <b>"Open in Browser"</b> để trải nghiệm đầy đủ.
+        </div>
+        <button id="btnDismissWarning" onclick="document.getElementById('inapp-warning').style.display='none'">Đã hiểu, tiếp tục</button>
+    </div>
+
+
    
     <div id="ui-layer">
         <div class="guide">
@@ -694,9 +703,20 @@
         }
 
         function startSystem() {
-            bgMusic.play().catch(e => console.log(e));
             init3D();
 
+            let cameraStarted = false;
+            const startCameraOnce = () => {
+                if (cameraStarted) return;
+                cameraStarted = true;
+                bgMusic.play().catch(e => console.log(e));
+                initCamera();
+            };
+            document.body.addEventListener('touchstart', startCameraOnce, { once: true });
+            document.body.addEventListener('click', startCameraOnce, { once: true });
+        }
+
+        function initCamera() {
             const video = document.getElementsByClassName('input_video')[0];
             const canvas = document.getElementById('camera-preview');
             const ctx = canvas.getContext('2d');
