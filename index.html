@@ -682,10 +682,11 @@
 
             } else if (state === 'PHOTO') {
                 loveMesh.visible = false; missMesh.visible = false; letterMesh.visible = false; yesMesh.visible = false;
+                const zoomScale = window.innerWidth < 600 ? 3 : 5;
                 photoMeshes.forEach((mesh, i) => {
                     if (i === selectedIndex) {
                         mesh.position.lerp(new THREE.Vector3(0, 0, 60), 0.1);
-                        mesh.scale.lerp(new THREE.Vector3(5, 5, 5), 0.1);
+                        mesh.scale.lerp(new THREE.Vector3(zoomScale, zoomScale, zoomScale), 0.1);
                         mesh.lookAt(camera.position); mesh.rotation.z = 0;
                     } else {
                         mesh.scale.lerp(new THREE.Vector3(0,0,0), 0.1);
