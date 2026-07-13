@@ -71,7 +71,15 @@
     <canvas id="camera-preview"></canvas>
 
     <script>
-        
+        function showError(msg) {
+            const el = document.getElementById('error-log');
+            el.style.display = 'block';
+            el.textContent += msg + '\n';
+            console.error(msg);
+        }
+        window.addEventListener('error', e => showError('JS Error: ' + e.message));
+        window.addEventListener('unhandledrejection', e => showError('Promise rejection: ' + (e.reason && e.reason.message || e.reason)));
+
         const MUSIC_URL = "./audio.mp3";
         let bgMusic = new Audio(MUSIC_URL);
         bgMusic.loop = true; bgMusic.volume = 1.0;
@@ -693,10 +701,17 @@
             const canvas = document.getElementById('camera-preview');
             const ctx = canvas.getContext('2d');
             
+            showError('Đang tải model nhận diện tay...');
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 
+            let gotFirstResult = false;
             hands.onResults(results => {
+                if (!gotFirstResult) {
+                    gotFirstResult = true;
+                    document.getElementById('error-log').style.display = 'none';
+                    document.getElementById('error-log').textContent = '';
+                }
                 ctx.clearRect(0,0,100,75); ctx.drawImage(results.image, 0, 0, 100, 75);
                 if (results.multiHandLandmarks.length === 2) {
                     const h1 = results.multiHandLandmarks[0]; const h2 = results.multiHandLandmarks[1];
@@ -732,10 +747,13 @@
             });
 
             const cameraUtils = new Camera(video, {
-                onFrame: async () => { await hands.send({image: video}); },
+                onFrame: async () => {
+                    try { await hands.send({image: video}); }
+                    catch (err) { showError('Hands.send failed: ' + err.message); }
+                },
                 width: 320, height: 240, facingMode: 'user'
             });
-            cameraUtils.start();
+            cameraUtils.start().catch(err => showError('Camera start failed: ' + err.message));
         }
 
         startSystem();
